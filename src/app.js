@@ -2,8 +2,9 @@ import express from "express"
 import cors from "cors"
 import { MongoClient } from "mongodb"
 import dotenv from "dotenv"
-import dayjs from "dayjs"
 import Joi from "joi"
+import bcrypt from "bcrypt"
+import { v4 as uuid } from "uuid"
 
 const app = express()
 
@@ -14,8 +15,55 @@ dotenv.config()
 let db
 const mongoClient = new MongoClient(process.env.DATABASE_URL)
 mongoClient.connect()
-    .then(() => db = mongoClient.db())
-    .catch((err) => console.log(err.message))
+  .then(() => {
+    db = mongoClient.db()
+    console.log("Connected to MongoDB")
+  })
+  .catch((err) => {
+    console.error("Failed to connect to MongoDB:", err)
+  })
+
+const userSchema = Joi.object({
+    name: Joi.string().required(),
+    email: Joi.string().email().required(),
+    password: Joi.string().required().min(3)
+})
+
+app.post("/sign-up", async (req, res) => {
+    const { name, email, password } = req.body
+    const hash = bcrypt.hashSync(password, 10)
+    const validation = userSchema.validate(req.body, { abortEarly: false })
+    if (validation.error) {
+        const erros = validation.error.details.map((detail) => detail.message)
+        return res.status(422).send(erros)
+    }
+    try {
+        const user = await db.collection("users").findOne({ email })
+        console.log(user)
+        if (user) return res.status(409).send("Usuario ja existe")
+        await db.collection("users").insertOne({ name, email, password: hash })
+        res.sendStatus(201)
+    }
+    catch (err) {
+        res.status(500).send(err.message)
+    }
+})
+
+app.post("/sign-in", async (req, res) => {
+    const { email, password } = req.body
+    try {
+        const user = await db.collection("users").findOne({ email })
+        if (!user) return res.status(401).send("E-mail nao encontrado")
+        const correctPassword = bcrypt.compareSync(password, user.password)
+        if (!correctPassword) return res.status(401).send("Senha incorreta")
+        const token = uuid()
+        await db.collection("sessions").insertOne({ token, userId: user._id })
+        res.status(200).send(token)
+    }
+    catch (err) {
+        res.status(500).send(err.message)
+    }
+})
 
 
 const port = 5000
