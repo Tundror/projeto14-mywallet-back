@@ -80,19 +80,24 @@ app.post("/sign-in", async (req, res) => {
 })
 
 app.post("/transaction", async (req, res) => {
-    const {value, description, type} = req.body
+    const { value, description, type } = req.body
     const validation = transactionSchema.validate(req.body)
     if (validation.error) {
         const erros = validation.error.details.map((detail) => detail.message)
         return res.status(422).send(erros)
     }
-    try{
-        await db.collection("transactions").insertOne({value, description, type})
+    try {
+        await db.collection("transactions").insertOne({ value, description, type })
         res.sendStatus(201)
     }
     catch (err) {
         res.status(500).send(err.message)
     }
+})
+
+app.get("/transaction", async (req, res) => {
+    const transactions = await db.collection("transactions").find().toArray()
+    res.status(200).send(transactions)
 })
 
 
