@@ -82,13 +82,18 @@ app.post("/sign-in", async (req, res) => {
 
 app.post("/transaction", async (req, res) => {
     const { value, description, type } = req.body
+    const { authorization } = req.headers
+    const token = authorization?.replace("Bearer ", "")
+    if (!token) return res.sendStatus(401)
     const validation = transactionSchema.validate(req.body)
     if (validation.error) {
         const erros = validation.error.details.map((detail) => detail.message)
         return res.status(422).send(erros)
     }
     try {
-        await db.collection("transactions").insertOne({ value, description, type, date: dayjs().format('DD/MM') })
+        const session = await db.collection("sessions").findOne({ token })
+        if (!session) return res.sendStatus(401)
+        await db.collection("transactions").insertOne({ value, description, type, date: dayjs().format('DD/MM'), userId: session.userId })
         res.sendStatus(201)
     }
     catch (err) {
@@ -97,9 +102,15 @@ app.post("/transaction", async (req, res) => {
 })
 
 app.get("/transaction", async (req, res) => {
-    const transactions = await db.collection("transactions").find().toArray()
+    const { authorization } = req.headers
+    const token = authorization?.replace("Bearer ", "")
+    if (!token) return res.sendStatus(401)
+    const session = await db.collection("sessions").findOne({ token })
+    if (!session) return res.sendStatus(401)
+    const transactions = await db.collection("transactions").find({userId: session.userId}).toArray()
     res.status(200).send(transactions)
 })
+
 
 
 const port = 5000
