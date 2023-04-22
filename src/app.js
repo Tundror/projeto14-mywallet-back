@@ -107,11 +107,29 @@ app.get("/transaction", async (req, res) => {
     if (!token) return res.sendStatus(401)
     const session = await db.collection("sessions").findOne({ token })
     if (!session) return res.sendStatus(401)
-    const transactions = await db.collection("transactions").find({userId: session.userId}).toArray()
-    res.status(200).send(transactions)
+    try {
+        const transactions = await db.collection("transactions").find({ userId: session.userId }).toArray()
+        res.status(200).send(transactions)
+    }
+    catch (err) {
+        res.status(500).send(err.message)
+    }
 })
 
-
+app.delete("/logout", async (req, res) => {
+    const { authorization } = req.headers
+    const token = authorization?.replace("Bearer ", "")
+    if (!token) return res.sendStatus(401)
+    const session = await db.collection("sessions").findOne({ token })
+    if (!session) return res.sendStatus(401)
+    try {
+        await db.collection("sessions").deleteOne({userId: session.userId})
+        res.sendStatus(200)
+    }
+    catch (err) {
+        res.status(500).send(err.message)
+    }
+})
 
 const port = 5000
 app.listen(5000, () => console.log(`servidor rodando na porta ${port}`))
