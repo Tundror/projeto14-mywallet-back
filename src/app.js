@@ -5,6 +5,7 @@ import dotenv from "dotenv"
 import Joi from "joi"
 import bcrypt from "bcrypt"
 import { v4 as uuid } from "uuid"
+import dayjs from "dayjs"
 
 const app = express()
 
@@ -87,7 +88,7 @@ app.post("/transaction", async (req, res) => {
         return res.status(422).send(erros)
     }
     try {
-        await db.collection("transactions").insertOne({ value, description, type })
+        await db.collection("transactions").insertOne({ value, description, type, date: dayjs().format('DD/MM') })
         res.sendStatus(201)
     }
     catch (err) {
