@@ -34,7 +34,7 @@ const signInSchema = Joi.object({
     password: Joi.string().required().min(3)
 })
 const transactionSchema = Joi.object({
-    value: Joi.number().precision(2).positive().required(),
+    value: Joi.number().precision(2).strict().positive().required(),
     description: Joi.string().required(),
     type: Joi.string().valid("in", "out").required()
 })
@@ -131,5 +131,4 @@ app.delete("/logout", async (req, res) => {
     }
 })
 
-const port = 5000
-app.listen(5000, () => console.log(`servidor rodando na porta ${port}`))
+app.listen(process.env.PORT, () => console.log(`servidor rodando na porta ${process.env.PORT}`))
