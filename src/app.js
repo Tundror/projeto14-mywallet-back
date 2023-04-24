@@ -10,4 +10,4 @@ app.use(router)
 
 
 //process.env.PORT
-app.listen(5000, () => console.log(`servidor rodando na porta ${5000}`))
+app.listen(process.env.PORT, () => console.log(`servidor rodando na porta ${process.env.PORT}`))
