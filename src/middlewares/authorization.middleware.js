@@ -6,6 +6,7 @@ export async function authValidate(req, res, next){
     if (!token) return res.sendStatus(401)
     try{
         const session = await db.collection("sessions").findOne({ token })
+        res.locals.session = session
         if (!session) return res.sendStatus(401)
         next()
     }

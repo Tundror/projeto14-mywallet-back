@@ -14,9 +14,7 @@ export async function newTransaction(req, res) {
 }
 
 export async function getTransactions(req, res) {
-    const { authorization } = req.headers
-    const token = authorization?.replace("Bearer ", "")
-    const session = await db.collection("sessions").findOne({ token })
+    const session = res.locals.session
     try {
         const transactions = await db.collection("transactions").find({ userId: session.userId }).toArray()
         res.status(200).send(transactions)
