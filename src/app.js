@@ -73,7 +73,7 @@ app.post("/sign-in", async (req, res) => {
         if (!correctPassword) return res.status(401).send("Senha incorreta")
         const token = uuid()
         await db.collection("sessions").insertOne({ token, userId: user._id })
-        res.status(200).send(token)
+        res.status(200).send({token, name: user.name})
     }
     catch (err) {
         res.status(500).send(err.message)
@@ -115,6 +115,7 @@ app.get("/transaction", async (req, res) => {
         res.status(500).send(err.message)
     }
 })
+
 
 app.delete("/logout", async (req, res) => {
     const { authorization } = req.headers
