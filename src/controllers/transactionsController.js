@@ -3,7 +3,7 @@ import { db } from "../database/database.connections.js"
 
 export async function newTransaction(req, res) {
     const { value, description, type } = req.body
-  
+    const session = res.locals.session
     try {
         await db.collection("transactions").insertOne({ value, description, type, date: dayjs().format('DD/MM'), userId: session.userId })
         res.sendStatus(201)
